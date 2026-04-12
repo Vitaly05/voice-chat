@@ -1,14 +1,28 @@
-import './assets/styles/index.scss'
+import './assets/styles/index.scss';
 
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
 
-import App from './App.vue'
-import router from './router'
+import App from './App.vue';
+import router from './router';
 
-const app = createApp(App)
+import Pusher from 'pusher-js';
+import Echo from 'laravel-echo';
 
-app.use(createPinia())
-app.use(router)
+window.Pusher = Pusher;
+window.Echo = new Echo({
+  broadcaster: 'reverb',
+  key: import.meta.env.VITE_REVERB_APP_KEY,
+  wsHost: import.meta.env.VITE_REVERB_HOST,
+  wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
+  wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+  forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+  enabledTransports: ['ws', 'wss'],
+})
 
-app.mount('#app')
+const app = createApp(App);
+
+app.use(createPinia());
+app.use(router);
+
+app.mount('#app');
