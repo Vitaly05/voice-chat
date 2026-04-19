@@ -1,4 +1,4 @@
-import './assets/styles/index.scss';
+import './assets/styles/index.css';
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
@@ -18,7 +18,7 @@ window.Echo = new Echo({
   wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
   forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
   enabledTransports: ['ws', 'wss'],
-})
+});
 
 const app = createApp(App);
 

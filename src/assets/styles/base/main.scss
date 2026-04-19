@@ -1,9 +1,0 @@
-@use 'vars' as vars;
-
-body {
-  padding: 0;
-  margin: 0;
-  background-color: vars.$bg-color;
-  color: vars.$text-primary;
-  font-family: vars.$font-family;
-}
