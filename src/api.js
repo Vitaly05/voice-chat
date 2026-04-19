@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useAuthStore } from '@/stores/authStore.js'
+import { useAuthStore } from '@/stores/authStore.js';
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -29,8 +29,8 @@ instance.interceptors.response.use(
   },
   (error) => {
     if (error.response && error.response.status === 401) {
-      const authStore = useAuthStore();
-      authStore.clearAccessToken();
+      useAuthStore().clearAccessToken();
+      window.location.href = '/login';
     }
 
     if (error.response && error.response.status === 422) {
@@ -41,10 +41,9 @@ instance.interceptors.response.use(
   },
 );
 
-async function apiRegister({ email, name, password }) {
+async function apiRegister({ name, password }) {
   try {
     const response = await instance.post('auth/register', {
-      email: email,
       name: name,
       password: password,
     });
