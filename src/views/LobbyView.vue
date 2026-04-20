@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import { apiSendAnswer, apiSendCandidate, apiSendOffer } from '@/api.js';
+import { apiSignal } from '@/api.js';
 import { onMounted, ref } from 'vue';
 
 const localVideoRef = ref(null);
@@ -48,7 +48,7 @@ async function initPeerConnection() {
 
   peerConnection.onicecandidate = async (event) => {
     if (event.candidate) {
-      await apiSendCandidate(event.candidate);
+      await apiSignal(0, event.candidate);
     }
   };
 
@@ -56,41 +56,27 @@ async function initPeerConnection() {
 }
 
 function setupEchoListeners() {
-  const channel = Echo.private(`Chat.${0}`);
+  Echo.private(`Chat.${0}`).listen('.signal', async (event) => {
+    const { data } = event;
 
-  channel.listen('.send-offer', async (event) => {
-    await peerConnection.setRemoteDescription(
-      new RTCSessionDescription({
-        type: 'offer',
-        sdp: event.offer.sdp,
-      }),
-    );
+    if (data.candidate) {
+      const candidate = new RTCIceCandidate(data);
 
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    await apiSendAnswer(peerConnection.localDescription);
+      if (peerConnection && peerConnection.remoteDescription) {
+        await peerConnection.addIceCandidate(candidate);
+      } else {
+        iceCandidatesQueue.push(candidate);
+      }
+    } else if (data.sdp) {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
 
-    await processIceQueue();
-  });
+      if (data.type === 'offer') {
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        await apiSignal(0, peerConnection.localDescription);
+      }
 
-  channel.listen('.send-answer', async (event) => {
-    await peerConnection.setRemoteDescription(
-      new RTCSessionDescription({
-        type: 'answer',
-        sdp: event.answer.sdp,
-      }),
-    );
-
-    await processIceQueue();
-  });
-
-  channel.listen('.new-ice-candidate', async (event) => {
-    const candidate = new RTCIceCandidate(event.candidate);
-
-    if (peerConnection && peerConnection.remoteDescription) {
-      await peerConnection.addIceCandidate(candidate);
-    } else {
-      iceCandidatesQueue.push(candidate);
+      await processIceQueue();
     }
   });
 }
@@ -109,6 +95,6 @@ async function startCall() {
 
   const offer = await peerConnection.createOffer();
   await peerConnection.setLocalDescription(offer);
-  await apiSendOffer(peerConnection.localDescription);
+  await apiSignal(0, peerConnection.localDescription);
 }
 </script>

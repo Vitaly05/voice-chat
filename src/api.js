@@ -104,66 +104,66 @@ async function apiSignal(remoteUserId, data) {
   }
 }
 
-async function apiSendCandidate(candidate) {
-  try {
-    await instance.post(
-      'chat/new-ice-candidate',
-      {
-        candidate: candidate,
-      },
-      {
-        headers: {
-          'X-Socket-ID': Echo.socketId(),
-        },
-      },
-    );
-  } catch (e) {
-    console.error('Request error: ' + e.message);
-  }
-}
-
-async function apiSendOffer(offer) {
-  try {
-    await instance.post(
-      'chat/send-offer',
-      {
-        offer: offer,
-      },
-      {
-        headers: {
-          'X-Socket-ID': Echo.socketId(),
-        },
-      },
-    );
-  } catch (e) {
-    console.error('Request error: ' + e.message);
-  }
-}
-
-async function apiSendAnswer(answer) {
-  try {
-    await instance.post(
-      'chat/send-answer',
-      {
-        answer: answer,
-      },
-      {
-        headers: {
-          'X-Socket-ID': Echo.socketId(),
-        },
-      },
-    );
-  } catch (e) {
-    console.error('Request error: ' + e.message);
-  }
-}
+// async function apiSendCandidate(candidate) {
+//   try {
+//     await instance.post(
+//       'chat/new-ice-candidate',
+//       {
+//         candidate: candidate,
+//       },
+//       {
+//         headers: {
+//           'X-Socket-ID': Echo.socketId(),
+//         },
+//       },
+//     );
+//   } catch (e) {
+//     console.error('Request error: ' + e.message);
+//   }
+// }
+//
+// async function apiSendOffer(offer) {
+//   try {
+//     await instance.post(
+//       'chat/send-offer',
+//       {
+//         offer: offer,
+//       },
+//       {
+//         headers: {
+//           'X-Socket-ID': Echo.socketId(),
+//         },
+//       },
+//     );
+//   } catch (e) {
+//     console.error('Request error: ' + e.message);
+//   }
+// }
+//
+// async function apiSendAnswer(answer) {
+//   try {
+//     await instance.post(
+//       'chat/send-answer',
+//       {
+//         answer: answer,
+//       },
+//       {
+//         headers: {
+//           'X-Socket-ID': Echo.socketId(),
+//         },
+//       },
+//     );
+//   } catch (e) {
+//     console.error('Request error: ' + e.message);
+//   }
+// }
 
 export {
   apiBroadcastAuthorizer,
   apiRegister,
   apiLoginByName,
   apiSignal,
-  apiSendCandidate,
-  apiSendOffer,
-  apiSendAnswer,
+  // apiSendCandidate,
+  // apiSendOffer,
+  // apiSendAnswer,
 };
