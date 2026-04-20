@@ -41,6 +41,24 @@ instance.interceptors.response.use(
   },
 );
 
+const apiBroadcastAuthorizer = (channel, options) => {
+  return {
+    authorize: (socketId, callback) => {
+      instance
+        .post(`https://${import.meta.env.VITE_REVERB_HOST}/v1/broadcasting/auth`, {
+          socket_id: socketId,
+          channel_name: channel.name,
+        })
+        .then((response) => {
+          callback(false, response.data);
+        })
+        .catch((error) => {
+          callback(true, error.response);
+        });
+    },
+  };
+};
+
 async function apiRegister({ name, password }) {
   try {
     const response = await instance.post('auth/register', {
@@ -69,13 +87,83 @@ async function apiLoginByName({ name, password }) {
 
 async function apiSignal(remoteUserId, data) {
   try {
-    await instance.post('signal', {
-      receiverId: remoteUserId,
-      data: data,
-    });
+    await instance.post(
+      'chat/signal',
+      {
+        receiverId: remoteUserId,
+        data: data,
+      },
+      {
+        headers: {
+          'X-Socket-ID': Echo.socketId(),
+        },
+      },
+    );
   } catch (e) {
     console.error('Request error: ' + e.message);
   }
 }
 
-export { apiRegister, apiLoginByName, apiSignal };
+async function apiSendCandidate(candidate) {
+  try {
+    await instance.post(
+      'chat/new-ice-candidate',
+      {
+        candidate: candidate,
+      },
+      {
+        headers: {
+          'X-Socket-ID': Echo.socketId(),
+        },
+      },
+    );
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiSendOffer(offer) {
+  try {
+    await instance.post(
+      'chat/send-offer',
+      {
+        offer: offer,
+      },
+      {
+        headers: {
+          'X-Socket-ID': Echo.socketId(),
+        },
+      },
+    );
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiSendAnswer(answer) {
+  try {
+    await instance.post(
+      'chat/send-answer',
+      {
+        answer: answer,
+      },
+      {
+        headers: {
+          'X-Socket-ID': Echo.socketId(),
+        },
+      },
+    );
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+export {
+  apiBroadcastAuthorizer,
+  apiRegister,
+  apiLoginByName,
+  apiSignal,
+  apiSendCandidate,
+  apiSendOffer,
+  apiSendAnswer,
+};
