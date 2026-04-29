@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import LobbyView from '../views/LobbyView.vue';
+import HomeView from '../views/HomeView.vue';
 import { useAuthStore } from '@/stores/authStore.js';
 
 const router = createRouter({
@@ -8,19 +8,26 @@ const router = createRouter({
     {
       path: '/',
       name: 'lobby',
-      component: LobbyView,
+      component: HomeView,
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('@/views/LoginView.vue'),
     },
+    {
+      path: '/registration',
+      name: 'registration',
+      component: () => import('@/views/RegistrationView.vue'),
+    },
   ],
 });
 
 router.beforeEach((to) => {
-  if (to.name !== 'login' && !useAuthStore().isAuthenticated) {
-    return { name: 'login' };
+  if (!useAuthStore().isAuthenticated) {
+    if (!['login', 'registration'].includes(to.name)) {
+      return { name: 'login' };
+    }
   }
 });
 

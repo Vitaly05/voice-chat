@@ -104,66 +104,57 @@ async function apiSignal(remoteUserId, data) {
   }
 }
 
-// async function apiSendCandidate(candidate) {
-//   try {
-//     await instance.post(
-//       'chat/new-ice-candidate',
-//       {
-//         candidate: candidate,
-//       },
-//       {
-//         headers: {
-//           'X-Socket-ID': Echo.socketId(),
-//         },
-//       },
-//     );
-//   } catch (e) {
-//     console.error('Request error: ' + e.message);
-//   }
-// }
-//
-// async function apiSendOffer(offer) {
-//   try {
-//     await instance.post(
-//       'chat/send-offer',
-//       {
-//         offer: offer,
-//       },
-//       {
-//         headers: {
-//           'X-Socket-ID': Echo.socketId(),
-//         },
-//       },
-//     );
-//   } catch (e) {
-//     console.error('Request error: ' + e.message);
-//   }
-// }
-//
-// async function apiSendAnswer(answer) {
-//   try {
-//     await instance.post(
-//       'chat/send-answer',
-//       {
-//         answer: answer,
-//       },
-//       {
-//         headers: {
-//           'X-Socket-ID': Echo.socketId(),
-//         },
-//       },
-//     );
-//   } catch (e) {
-//     console.error('Request error: ' + e.message);
-//   }
-// }
+async function apiGetAllFriends() {
+  try {
+    const response = await instance.get('user/get-all-friends');
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiGetCurrentUserInfo() {
+  try {
+    const response = await instance.get('user/get-info');
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiStartCall(recipientId) {
+  try {
+    const response = await instance.post('chat/start-call', {
+      recipient_id: recipientId,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiAcceptCall(senderId) {
+  try {
+    const response = await instance.post('chat/accept-call', {
+      sender_id: senderId,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
 
 export {
   apiBroadcastAuthorizer,
   apiRegister,
   apiLoginByName,
   apiSignal,
-  // apiSendCandidate,
-  // apiSendOffer,
-  // apiSendAnswer,
+  apiGetAllFriends,
+  apiGetCurrentUserInfo,
+  apiStartCall,
+  apiAcceptCall,
 };

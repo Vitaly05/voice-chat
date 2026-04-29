@@ -13,9 +13,13 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@primeuix/themes": "^2.0.3",
+    "@primevue/forms": "^4.5.5",
     "@tailwindcss/vite": "^4.2.2",
     "axios": "^1.15.0",
     "pinia": "^3.0.4",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.5.5",
     "pusher-js": "^8.5.0",
     "sass": "^1.98.0",
     "tailwindcss": "^4.2.2",
