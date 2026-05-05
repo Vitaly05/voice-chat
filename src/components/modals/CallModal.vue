@@ -4,7 +4,15 @@
       <div class="flex items-center gap-2">
         <i class="pi pi-phone text-green-400" style="font-size: 1.5rem"></i>
 
-        <span class="text-2xl">Incoming Call</span>
+        <span class="ml-2 text-2xl">
+          <span class="text-green-400">
+            {{ callStore.remoteUserName }}
+          </span>
+
+          <br />
+
+          {{ headerTitle }}
+        </span>
       </div>
     </template>
 
@@ -13,27 +21,77 @@
     </template>
 
     <template #footer>
-      <div class="flex items-center justify-center w-full gap-10">
-        <Button icon="pi pi-phone" size="large" severity="success" rounded />
+      <div
+        v-if="callStore.callState === callStates.income"
+        class="flex items-center justify-center w-full gap-10"
+      >
+        <Button icon="pi pi-phone" size="large" severity="success" rounded @click="accept" />
+        <Button icon="pi pi-times" size="large" severity="danger" rounded @click="close" />
+      </div>
+
+      <div
+        v-else-if="callStore.callState === callStates.ringing"
+        class="flex items-center justify-center w-full gap-10"
+      >
+        <Button icon="pi pi-times" size="large" severity="danger" rounded @click="close" />
+      </div>
+
+      <div
+        v-else-if="callStore.callState === callStates.call"
+        class="flex items-center justify-center w-full gap-10"
+      >
+        <Button icon="pi pi-microphone" size="large" severity="secondary" rounded />
+        <Button icon="pi pi-camera" size="large" severity="secondary" rounded />
+        <Button icon="pi pi-times" size="large" severity="danger" rounded @click="close" />
+      </div>
+
+      <div
+        v-else-if="callStore.callState === callStates.rejected"
+        class="flex items-center justify-center w-full gap-10"
+      >
+        <Button icon="pi pi-times" size="large" severity="danger" rounded @click="close" />
+      </div>
+
+      <div
+        v-else-if="callStore.callState === callStates.canceled"
+        class="flex items-center justify-center w-full gap-10"
+      >
         <Button icon="pi pi-times" size="large" severity="danger" rounded @click="close" />
       </div>
     </template>
 
     <div>
-      <video ref="localVideoRef" autoplay playsinline muted />
-      <video ref="remoteVideoRef" autoplay playsinline muted />
+      <div
+        v-if="callStore.callState === callStates.income"
+        class="flex items-center justify-center h-full"
+      >
+        <span>Income Call Icon</span>
+      </div>
 
-      <audio ref="remoteAudioRef" autoplay />
+      <div
+        v-if="callStore.callState === callStates.ringing"
+        class="flex items-center justify-center h-full"
+      >
+        <span>Ringing Icon</span>
+      </div>
+
+      <div v-show="callStore.callState === callStates.call" class="flex flex-col gap-3">
+        <video ref="localVideoRef" class="video" autoplay playsinline muted />
+        <video ref="remoteVideoRef" class="video" autoplay playsinline muted />
+
+        <audio ref="remoteAudioRef" autoplay />
+      </div>
     </div>
   </Dialog>
 </template>
 
 <script setup>
 import { Dialog, Button } from 'primevue';
-import { onMounted, watchEffect } from 'vue';
-import { useCallStore } from '@/stores/callStore.js';
+import { computed, watchEffect } from 'vue';
+import { callStates, useCallStore } from '@/stores/callStore.js';
 import { useWebRTC } from '@/composables/webRTC.js';
 import { useAuthStore } from '@/stores/authStore.js';
+import { apiAcceptCall } from '@/api.js';
 
 const authStore = useAuthStore();
 const callStore = useCallStore();
@@ -41,21 +99,40 @@ const callStore = useCallStore();
 const { localVideoRef, remoteVideoRef, remoteAudioRef, initPeerConnection, acceptCall } =
   useWebRTC();
 
+const headerTitle = computed(() => {
+  switch (callStore.callState) {
+    case callStates.income:
+      return `Income call`;
+    case callStates.ringing:
+      return 'Ringing..';
+    case callStates.connecting:
+      return 'Connecting..';
+    case callStates.rejected:
+      return 'Call rejected';
+    case callStates.canceled:
+      return 'Call canceled';
+    default:
+      return 'Call';
+  }
+});
+
 function close() {
   callStore.hideCallModal();
 }
 
+async function accept() {
+  callStore.setState(callStates.connecting);
+
+  await apiAcceptCall(callStore.remoteUserId);
+
+  await callStore.acceptCall();
+
+  await acceptCall();
+}
+
 watchEffect(async () => {
-  if (callStore.isCallStarted) {
+  if (callStore.callState === callStates.connecting) {
     await initPeerConnection(authStore.userInfo.id, callStore.remoteUserId);
   }
-
-  if (callStore.isCallAccepted) {
-    await acceptCall();
-  }
-});
-
-onMounted(() => {
-  // callStore.showCallModal();
 });
 </script>

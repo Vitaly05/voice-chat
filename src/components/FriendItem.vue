@@ -12,6 +12,7 @@
 <script setup>
 import { Button } from 'primevue';
 import { apiStartCall } from '@/api.js';
+import { callStates, useCallStore } from '@/stores/callStore.js';
 
 const props = defineProps({
   name: {
@@ -25,7 +26,14 @@ const props = defineProps({
   },
 });
 
+const callStore = useCallStore();
+
 async function call() {
   await apiStartCall(props.id);
+
+  callStore.remoteUserName = props.name;
+  callStore.remoteUserId = props.id;
+
+  callStore.setState(callStates.ringing);
 }
 </script>

@@ -12,8 +12,7 @@ import AppHeader from '@/components/AppHeader.vue';
 import FriendList from '@/components/FriendList.vue';
 import CallModal from '@/components/modals/CallModal.vue';
 import { onMounted } from 'vue';
-import { apiAcceptCall } from '@/api.js';
-import { useCallStore } from '@/stores/callStore.js';
+import { callStates, useCallStore } from '@/stores/callStore.js';
 import { useAuthStore } from '@/stores/authStore.js';
 
 const authStore = useAuthStore();
@@ -29,18 +28,18 @@ onMounted(async () => {
 function listenIncomingCalls(currentUserId) {
   // eslint-disable-next-line no-undef
   Echo.private(`Chat.${currentUserId}`).listen('.income-call', async (event) => {
-    await apiAcceptCall(event.sender_id);
+    callStore.remoteUserId = event.sender_id;
+    callStore.remoteUserName = event.sender_name;
 
-    callStore.showCallModal();
-    callStore.acceptCall(event.sender_id);
+    callStore.setState(callStates.income);
   });
 }
 
 function listenCallAccepts(currentUserId) {
   // eslint-disable-next-line no-undef
   Echo.private(`Chat.${currentUserId}`).listen('.accept-call', async (event) => {
-    callStore.showCallModal();
-    callStore.startCall(event.recipient_id);
+    callStore.setState(callStates.connecting);
+    callStore.startCall();
   });
 }
 </script>

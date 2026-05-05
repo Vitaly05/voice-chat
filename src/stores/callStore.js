@@ -1,27 +1,34 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
+const callStates = {
+  await: 0,
+  income: 1,
+  ringing: 2,
+  connecting: 3,
+  call: 4,
+  rejected: 5,
+  canceled: 6,
+};
+
 const useCallStore = defineStore('call', () => {
   const isCallModalVisible = ref(false);
   const isCallStarted = ref(false);
   const isCallAccepted = ref(false);
   const remoteUserId = ref(null);
+  const remoteUserName = ref('');
+  const callState = ref(callStates.canceled);
 
-  function showCallModal() {
-    isCallModalVisible.value = true;
+  function setState(state) {
+      callState.value = state;
+      isCallModalVisible.value = true;
   }
 
-  function hideCallModal() {
-    isCallModalVisible.value = false;
-  }
-
-  function startCall(_remoteUserId) {
-    remoteUserId.value = _remoteUserId;
+  function startCall() {
     isCallStarted.value = true;
   }
 
-  function acceptCall(_remoteUserId) {
-    remoteUserId.value = _remoteUserId;
+  function acceptCall() {
     isCallStarted.value = true;
     isCallAccepted.value = true;
   }
@@ -31,11 +38,12 @@ const useCallStore = defineStore('call', () => {
     isCallStarted,
     isCallAccepted,
     remoteUserId,
-    showCallModal,
-    hideCallModal,
+    remoteUserName,
+    callState,
+    setState,
     startCall,
     acceptCall,
   };
 });
 
-export { useCallStore };
+export { useCallStore, callStates };
