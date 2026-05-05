@@ -1,5 +1,6 @@
 import { onMounted, ref } from 'vue';
 import { apiSignal } from '@/api.js';
+import { callStates, useCallStore } from '@/stores/callStore.js';
 
 export function useWebRTC() {
   const localVideoRef = ref(null);
@@ -15,6 +16,8 @@ export function useWebRTC() {
   const videoStream = ref(null);
   const audioStream = ref(null);
 
+  const callStore = useCallStore();
+
   onMounted(async () => {
     videoStream.value = await navigator.mediaDevices.getUserMedia({ video: true });
     audioStream.value = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -28,8 +31,12 @@ export function useWebRTC() {
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
     });
 
-    audioStream.value.getTracks().forEach((track) => peerConnection.value.addTrack(track, audioStream.value));
-    videoStream.value.getTracks().forEach((track) => peerConnection.value.addTrack(track, videoStream.value));
+    audioStream.value
+      .getTracks()
+      .forEach((track) => peerConnection.value.addTrack(track, audioStream.value));
+    videoStream.value
+      .getTracks()
+      .forEach((track) => peerConnection.value.addTrack(track, videoStream.value));
 
     localVideoRef.value.srcObject = videoStream.value;
 
@@ -46,6 +53,14 @@ export function useWebRTC() {
     peerConnection.value.onicecandidate = async (event) => {
       if (event.candidate) {
         await apiSignal(remoteUserId.value, event.candidate);
+      }
+    };
+
+    peerConnection.value.onconnectionstatechange = (event) => {
+      switch (peerConnection.value.connectionState) {
+        case 'connected':
+          callStore.setState(callStates.call);
+          break;
       }
     };
 
