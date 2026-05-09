@@ -26,14 +26,14 @@
         class="flex items-center justify-center w-full gap-10"
       >
         <Button icon="pi pi-phone" size="large" severity="success" rounded @click="accept" />
-        <Button icon="pi pi-times" size="large" severity="danger" rounded @click="close" />
+        <Button icon="pi pi-times" size="large" severity="danger" rounded @click="reject" />
       </div>
 
       <div
         v-else-if="callStore.callState === callStates.ringing"
         class="flex items-center justify-center w-full gap-10"
       >
-        <Button icon="pi pi-times" size="large" severity="danger" rounded @click="close" />
+        <Button icon="pi pi-times" size="large" severity="danger" rounded @click="cancel" />
       </div>
 
       <div
@@ -42,7 +42,7 @@
       >
         <Button icon="pi pi-microphone" size="large" severity="secondary" rounded />
         <Button icon="pi pi-camera" size="large" severity="secondary" rounded />
-        <Button icon="pi pi-times" size="large" severity="danger" rounded @click="close" />
+        <Button icon="pi pi-times" size="large" severity="danger" rounded @click="cancel" />
       </div>
 
       <div
@@ -91,13 +91,19 @@ import { computed, watchEffect } from 'vue';
 import { callStates, useCallStore } from '@/stores/callStore.js';
 import { useWebRTC } from '@/composables/webRTC.js';
 import { useAuthStore } from '@/stores/authStore.js';
-import { apiAcceptCall } from '@/api.js';
+import { apiAcceptCall, apiCancelCall, apiRejectCall } from '@/api.js';
 
 const authStore = useAuthStore();
 const callStore = useCallStore();
 
-const { localVideoRef, remoteVideoRef, remoteAudioRef, initPeerConnection, acceptCall } =
-  useWebRTC();
+const {
+  localVideoRef,
+  remoteVideoRef,
+  remoteAudioRef,
+  initPeerConnection,
+  acceptCall,
+  cancelCall,
+} = useWebRTC();
 
 const headerTitle = computed(() => {
   switch (callStore.callState) {
@@ -116,23 +122,38 @@ const headerTitle = computed(() => {
   }
 });
 
-function close() {
-  callStore.hideCallModal();
+function reject() {
+  apiRejectCall(callStore.remoteUserId);
+
+  callStore.setState(callStates.await);
 }
 
 async function accept() {
   callStore.setState(callStates.connecting);
 
   await apiAcceptCall(callStore.remoteUserId);
-
   await callStore.acceptCall();
-
   await acceptCall();
 }
 
+function cancel() {
+  apiCancelCall(callStore.remoteUserId);
+
+  callStore.setState(callStates.canceled);
+}
+
+function close() {
+  callStore.setState(callStates.await);
+}
+
 watchEffect(async () => {
-  if (callStore.callState === callStates.connecting) {
-    await initPeerConnection(authStore.userInfo.id, callStore.remoteUserId);
+  switch (callStore.callState) {
+    case callStates.connecting:
+      await initPeerConnection(authStore.userInfo.id, callStore.remoteUserId);
+      break;
+    case callStates.canceled:
+      cancelCall();
+      break;
   }
 });
 </script>

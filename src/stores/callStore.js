@@ -17,11 +17,16 @@ const useCallStore = defineStore('call', () => {
   const isCallAccepted = ref(false);
   const remoteUserId = ref(null);
   const remoteUserName = ref('');
-  const callState = ref(callStates.canceled);
+  const callState = ref(callStates.await);
 
   function setState(state) {
-      callState.value = state;
+    callState.value = state;
+
+    if (state === callStates.await) {
+      isCallModalVisible.value = false;
+    } else {
       isCallModalVisible.value = true;
+    }
   }
 
   function startCall() {

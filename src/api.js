@@ -148,6 +148,30 @@ async function apiAcceptCall(senderId) {
   }
 }
 
+async function apiRejectCall(senderId) {
+  try {
+    const response = await instance.post('chat/reject-call', {
+      sender_id: senderId,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiCancelCall(senderId) {
+  try {
+    const response = await instance.post('chat/cancel-call', {
+      sender_id: senderId,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
 export {
   apiBroadcastAuthorizer,
   apiRegister,
@@ -157,4 +181,6 @@ export {
   apiGetCurrentUserInfo,
   apiStartCall,
   apiAcceptCall,
+  apiRejectCall,
+  apiCancelCall,
 };

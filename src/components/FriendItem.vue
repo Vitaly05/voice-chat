@@ -28,8 +28,8 @@ const props = defineProps({
 
 const callStore = useCallStore();
 
-async function call() {
-  await apiStartCall(props.id);
+function call() {
+  apiStartCall(props.id);
 
   callStore.remoteUserName = props.name;
   callStore.remoteUserId = props.id;

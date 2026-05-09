@@ -21,25 +21,27 @@ const callStore = useCallStore();
 onMounted(async () => {
   await authStore.getUserInfo();
 
-  listenIncomingCalls(authStore.userInfo.id);
-  listenCallAccepts(authStore.userInfo.id);
+  listenChatChannel(authStore.userInfo.id);
 });
 
-function listenIncomingCalls(currentUserId) {
+function listenChatChannel(currentUserId) {
   // eslint-disable-next-line no-undef
-  Echo.private(`Chat.${currentUserId}`).listen('.income-call', async (event) => {
-    callStore.remoteUserId = event.sender_id;
-    callStore.remoteUserName = event.sender_name;
+  Echo.private(`Chat.${currentUserId}`)
+    .listen('.income-call', async (event) => {
+      callStore.remoteUserId = event.sender_id;
+      callStore.remoteUserName = event.sender_name;
 
-    callStore.setState(callStates.income);
-  });
-}
-
-function listenCallAccepts(currentUserId) {
-  // eslint-disable-next-line no-undef
-  Echo.private(`Chat.${currentUserId}`).listen('.accept-call', async (event) => {
-    callStore.setState(callStates.connecting);
-    callStore.startCall();
-  });
+      callStore.setState(callStates.income);
+    })
+    .listen('.accept-call', async () => {
+      callStore.setState(callStates.connecting);
+      callStore.startCall();
+    })
+    .listen('.reject-call', async () => {
+      callStore.setState(callStates.rejected);
+    })
+    .listen('.cancel-call', async () => {
+      callStore.setState(callStates.canceled);
+    });
 }
 </script>

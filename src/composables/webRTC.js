@@ -1,4 +1,4 @@
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { apiSignal } from '@/api.js';
 import { callStates, useCallStore } from '@/stores/callStore.js';
 
@@ -18,12 +18,10 @@ export function useWebRTC() {
 
   const callStore = useCallStore();
 
-  onMounted(async () => {
+  async function initPeerConnection(_currentUserId, _remoteUserId) {
     videoStream.value = await navigator.mediaDevices.getUserMedia({ video: true });
     audioStream.value = await navigator.mediaDevices.getUserMedia({ audio: true });
-  });
 
-  async function initPeerConnection(_currentUserId, _remoteUserId) {
     currentUserId.value = _currentUserId;
     remoteUserId.value = _remoteUserId;
 
@@ -94,6 +92,29 @@ export function useWebRTC() {
     });
   }
 
+  function closeConnection() {
+    if (!peerConnection.value) {
+      return;
+    }
+
+    const senders = peerConnection.value.getSenders();
+
+    senders.forEach((sender) => {
+      if (sender.track) {
+        sender.track.stop();
+      }
+    });
+
+    peerConnection.value.close();
+
+    peerConnection.value.ontrack = null;
+    peerConnection.value.onicecandidate = null;
+    peerConnection.value.onconnectionstatechange = null;
+    peerConnection.value = null;
+
+    Echo.private(`Chat.${currentUserId.value}`).stopListening('.signal');
+  }
+
   async function processIceQueue() {
     while (iceCandidatesQueue.length > 0) {
       const candidate = iceCandidatesQueue.shift();
@@ -111,6 +132,10 @@ export function useWebRTC() {
     await apiSignal(remoteUserId.value, peerConnection.value.localDescription);
   }
 
+  function cancelCall() {
+    closeConnection();
+  }
+
   return {
     localVideoRef,
     remoteVideoRef,
@@ -118,5 +143,6 @@ export function useWebRTC() {
     peerConnection,
     initPeerConnection,
     acceptCall,
+    cancelCall,
   };
 }
