@@ -1,4 +1,4 @@
-import { ref, watchEffect } from 'vue';
+import { ref } from 'vue';
 import { apiSignal } from '@/api.js';
 import { callStates, useCallStore } from '@/stores/callStore.js';
 
