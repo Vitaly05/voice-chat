@@ -67,6 +67,8 @@ export function useWebRTC() {
           if (callStore.isCallAccepted) {
             await toggleMicrophone(true)
             await signalOffer();
+
+            callStore.isCallAccepted = false;
           }
 
           break;
