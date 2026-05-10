@@ -40,8 +40,20 @@
         v-else-if="callStore.callState === callStates.call"
         class="flex items-center justify-center w-full gap-10"
       >
-        <Button icon="pi pi-microphone" size="large" severity="secondary" rounded />
-        <Button icon="pi pi-camera" size="large" severity="secondary" rounded />
+        <Button
+          icon="pi pi-microphone"
+          size="large"
+          :severity="isMicrophoneEnabled ? 'primary' : 'secondary'"
+          rounded
+          @click="() => _toggleMicrophone(!isMicrophoneEnabled)"
+        />
+        <Button
+          icon="pi pi-camera"
+          size="large"
+          :severity="isCameraEnabled ? 'primary' : 'secondary'"
+          rounded
+          @click="() => _toggleCamera(!isCameraEnabled)"
+        />
         <Button icon="pi pi-times" size="large" severity="danger" rounded @click="cancel" />
       </div>
 
@@ -87,7 +99,7 @@
 
 <script setup>
 import { Dialog, Button } from 'primevue';
-import { computed, watchEffect } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import { callStates, useCallStore } from '@/stores/callStore.js';
 import { useWebRTC } from '@/composables/webRTC.js';
 import { useAuthStore } from '@/stores/authStore.js';
@@ -96,6 +108,9 @@ import { apiAcceptCall, apiCancelCall, apiRejectCall } from '@/api.js';
 const authStore = useAuthStore();
 const callStore = useCallStore();
 
+const isMicrophoneEnabled = ref(true);
+const isCameraEnabled = ref(false);
+
 const {
   localVideoRef,
   remoteVideoRef,
@@ -103,6 +118,8 @@ const {
   initPeerConnection,
   acceptCall,
   cancelCall,
+  toggleCamera,
+  toggleMicrophone,
 } = useWebRTC();
 
 const headerTitle = computed(() => {
@@ -122,6 +139,17 @@ const headerTitle = computed(() => {
   }
 });
 
+watchEffect(() => {
+  if (callStore.callState === callStates.canceled) {
+    isCameraEnabled.value = false;
+    isMicrophoneEnabled.value = true;
+  }
+
+  if (callStore.callState === callStates.call) {
+    // _toggleMicrophone(true);
+  }
+});
+
 function reject() {
   apiRejectCall(callStore.remoteUserId);
 
@@ -132,7 +160,6 @@ async function accept() {
   callStore.setState(callStates.connecting);
 
   await apiAcceptCall(callStore.remoteUserId);
-  await callStore.acceptCall();
   await acceptCall();
 }
 
@@ -144,6 +171,24 @@ function cancel() {
 
 function close() {
   callStore.setState(callStates.await);
+}
+
+async function _toggleCamera() {
+  if (isCameraEnabled.value) {
+    await toggleCamera(false);
+
+    isCameraEnabled.value = false;
+  } else {
+    await toggleCamera(true);
+
+    isCameraEnabled.value = true;
+  }
+}
+
+async function _toggleMicrophone(enabled) {
+  await toggleMicrophone(enabled);
+
+  isMicrophoneEnabled.value = enabled;
 }
 
 watchEffect(async () => {

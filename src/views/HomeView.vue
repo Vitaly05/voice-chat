@@ -35,7 +35,7 @@ function listenChatChannel(currentUserId) {
     })
     .listen('.accept-call', async () => {
       callStore.setState(callStates.connecting);
-      callStore.startCall();
+      callStore.isCallAccepted = true;
     })
     .listen('.reject-call', async () => {
       callStore.setState(callStates.rejected);

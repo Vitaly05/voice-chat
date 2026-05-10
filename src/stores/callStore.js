@@ -13,11 +13,10 @@ const callStates = {
 
 const useCallStore = defineStore('call', () => {
   const isCallModalVisible = ref(false);
-  const isCallStarted = ref(false);
-  const isCallAccepted = ref(false);
   const remoteUserId = ref(null);
   const remoteUserName = ref('');
   const callState = ref(callStates.await);
+  const isCallAccepted = ref(false);
 
   function setState(state) {
     callState.value = state;
@@ -29,25 +28,13 @@ const useCallStore = defineStore('call', () => {
     }
   }
 
-  function startCall() {
-    isCallStarted.value = true;
-  }
-
-  function acceptCall() {
-    isCallStarted.value = true;
-    isCallAccepted.value = true;
-  }
-
   return {
     isCallModalVisible,
-    isCallStarted,
-    isCallAccepted,
     remoteUserId,
     remoteUserName,
     callState,
+    isCallAccepted,
     setState,
-    startCall,
-    acceptCall,
   };
 });
 

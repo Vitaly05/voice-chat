@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, watchEffect } from 'vue';
 import { apiSignal } from '@/api.js';
 import { callStates, useCallStore } from '@/stores/callStore.js';
 
@@ -13,15 +13,14 @@ export function useWebRTC() {
   const peerConnection = ref(null);
   const iceCandidatesQueue = [];
 
-  const videoStream = ref(null);
-  const audioStream = ref(null);
+  const videoTransceiver = ref(null);
+  const audioTransceiver = ref(null);
+
+  const localMediaStream = { video: null, audio: null };
 
   const callStore = useCallStore();
 
   async function initPeerConnection(_currentUserId, _remoteUserId) {
-    videoStream.value = await navigator.mediaDevices.getUserMedia({ video: true });
-    audioStream.value = await navigator.mediaDevices.getUserMedia({ audio: true });
-
     currentUserId.value = _currentUserId;
     remoteUserId.value = _remoteUserId;
 
@@ -29,35 +28,47 @@ export function useWebRTC() {
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
     });
 
-    audioStream.value
-      .getTracks()
-      .forEach((track) => peerConnection.value.addTrack(track, audioStream.value));
-    videoStream.value
-      .getTracks()
-      .forEach((track) => peerConnection.value.addTrack(track, videoStream.value));
-
-    localVideoRef.value.srcObject = videoStream.value;
+    videoTransceiver.value = peerConnection.value.addTransceiver('video', {
+      direction: 'sendrecv',
+    });
+    audioTransceiver.value = peerConnection.value.addTransceiver('audio', {
+      direction: 'sendrecv',
+    });
 
     peerConnection.value.ontrack = (event) => {
-      const remoteStream = event.streams[0];
+      const stream = event.streams[0] || new MediaStream([event.track]);
 
       if (event.track.kind === 'video') {
-        remoteVideoRef.value.srcObject = remoteStream;
-      } else if (event.track.kind === 'audio') {
-        remoteAudioRef.value.srcObject = remoteStream;
+        remoteVideoRef.value.srcObject = stream;
+
+        event.track.onmute = () => {
+          remoteVideoRef.value.srcObject = null;
+        };
+
+        event.track.onunmute = () => {
+          remoteVideoRef.value.srcObject = stream;
+        };
+      } else {
+        remoteAudioRef.value.srcObject = stream;
       }
     };
 
-    peerConnection.value.onicecandidate = async (event) => {
+    peerConnection.value.onicecandidate = (event) => {
       if (event.candidate) {
-        await apiSignal(remoteUserId.value, event.candidate);
+        apiSignal(remoteUserId.value, event.candidate);
       }
     };
 
-    peerConnection.value.onconnectionstatechange = (event) => {
+    peerConnection.value.onconnectionstatechange = async (event) => {
       switch (peerConnection.value.connectionState) {
         case 'connected':
           callStore.setState(callStates.call);
+
+          if (callStore.isCallAccepted) {
+            await toggleMicrophone(true)
+            await signalOffer();
+          }
+
           break;
       }
     };
@@ -127,13 +138,60 @@ export function useWebRTC() {
       return;
     }
 
-    const offer = await peerConnection.value.createOffer();
-    await peerConnection.value.setLocalDescription(offer);
-    await apiSignal(remoteUserId.value, peerConnection.value.localDescription);
+    await toggleMicrophone(true);
+    await signalOffer();
   }
 
   function cancelCall() {
     closeConnection();
+  }
+
+  async function toggleMicrophone(enabled) {
+    if (enabled) {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localMediaStream.audio = stream;
+
+      const track = stream.getAudioTracks()[0];
+      await audioTransceiver.value.sender.replaceTrack(track);
+    } else {
+      if (localMediaStream.audio) {
+        localMediaStream.audio.getTracks().forEach((t) => t.stop());
+      }
+
+      await audioTransceiver.value.sender.replaceTrack(null);
+    }
+  }
+
+  async function toggleCamera(enabled) {
+    if (enabled) {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      localMediaStream.video = stream;
+      localVideoRef.value.srcObject = stream;
+
+      const track = stream.getVideoTracks()[0];
+
+      videoTransceiver.value.direction = 'sendrecv';
+      await videoTransceiver.value.sender.replaceTrack(track);
+    } else {
+      if (localMediaStream.video) {
+        localMediaStream.video.getTracks().forEach((t) => t.stop());
+      }
+
+      localVideoRef.value.srcObject = null;
+
+      videoTransceiver.value.direction = 'recvonly';
+      await videoTransceiver.value.sender.replaceTrack(null);
+    }
+
+    if (peerConnection.value?.signalingState === 'stable') {
+      await signalOffer();
+    }
+  }
+
+  async function signalOffer() {
+    const offer = await peerConnection.value.createOffer();
+    await peerConnection.value.setLocalDescription(offer);
+    await apiSignal(remoteUserId.value, peerConnection.value.localDescription);
   }
 
   return {
@@ -144,5 +202,7 @@ export function useWebRTC() {
     initPeerConnection,
     acceptCall,
     cancelCall,
+    toggleMicrophone,
+    toggleCamera,
   };
 }
