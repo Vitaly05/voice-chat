@@ -41,6 +41,24 @@ instance.interceptors.response.use(
   },
 );
 
+const apiBroadcastAuthorizer = (channel, options) => {
+  return {
+    authorize: (socketId, callback) => {
+      instance
+        .post(`https://${import.meta.env.VITE_REVERB_HOST}/v1/broadcasting/auth`, {
+          socket_id: socketId,
+          channel_name: channel.name,
+        })
+        .then((response) => {
+          callback(false, response.data);
+        })
+        .catch((error) => {
+          callback(true, error.response);
+        });
+    },
+  };
+};
+
 async function apiRegister({ name, password }) {
   try {
     const response = await instance.post('auth/register', {
@@ -67,4 +85,102 @@ async function apiLoginByName({ name, password }) {
   }
 }
 
-export { apiRegister, apiLoginByName };
+async function apiSignal(remoteUserId, data) {
+  try {
+    await instance.post(
+      'chat/signal',
+      {
+        receiverId: remoteUserId,
+        data: data,
+      },
+      {
+        headers: {
+          'X-Socket-ID': Echo.socketId(),
+        },
+      },
+    );
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiGetAllFriends() {
+  try {
+    const response = await instance.get('user/get-all-friends');
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiGetCurrentUserInfo() {
+  try {
+    const response = await instance.get('user/get-info');
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiStartCall(recipientId) {
+  try {
+    const response = await instance.post('chat/start-call', {
+      recipient_id: recipientId,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiAcceptCall(senderId) {
+  try {
+    const response = await instance.post('chat/accept-call', {
+      sender_id: senderId,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiRejectCall(senderId) {
+  try {
+    const response = await instance.post('chat/reject-call', {
+      sender_id: senderId,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiCancelCall(senderId) {
+  try {
+    const response = await instance.post('chat/cancel-call', {
+      sender_id: senderId,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+export {
+  apiBroadcastAuthorizer,
+  apiRegister,
+  apiLoginByName,
+  apiSignal,
+  apiGetAllFriends,
+  apiGetCurrentUserInfo,
+  apiStartCall,
+  apiAcceptCall,
+  apiRejectCall,
+  apiCancelCall,
+};

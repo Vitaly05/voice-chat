@@ -2,7 +2,7 @@
   <main>
     <div class="flex justify-center items-center h-dvh px-2">
       <div class="p-6 w-100 rounded border border-stone-100/30">
-        <h1 class="font-bold text-2xl text-center">Login</h1>
+        <h1 class="font-bold text-2xl text-center">Registration</h1>
 
         <Form
           v-slot="$form"
@@ -10,7 +10,7 @@
           :validate-on-blur="true"
           :initial-values
           :resolver
-          @submit="sendLoginRequest"
+          @submit="sendRegisterRequest"
         >
           <div class="mt-4 flex flex-col gap-3">
             <div class="flex flex-col gap-1">
@@ -19,8 +19,14 @@
                 <label for="name">Name</label>
               </FloatLabel>
 
-              <Message v-if="$form.name?.invalid" severity="error" size="small" variant="simple"
-              >{{ $form.name.error?.message }}
+              <Message
+                v-if="$form.name?.invalid || !!errorsFromApi.name"
+                severity="error"
+                size="small"
+                variant="simple"
+              >
+                {{ $form.name.error?.message }}
+                {{ errorsFromApi.name }}
               </Message>
             </div>
 
@@ -31,25 +37,24 @@
               </FloatLabel>
 
               <Message v-if="$form.password?.invalid" severity="error" size="small" variant="simple"
-              >{{ $form.password.error?.message }}
+                >{{ $form.password.error?.message }}
               </Message>
             </div>
           </div>
 
           <div class="mt-6 flex gap-4 justify-between">
-            <Button type="submit" label="Login" class="button" :loading="isLoading" />
+            <Button type="submit" label="Registration" class="button" :loading="isLoading" />
 
             <Button
-              label="Registration"
+              label="Login"
               class="p-0!"
               as="router-link"
               variant="link"
-              :to="{ name: 'registration' }"
+              :to="{ name: 'login' }"
             />
           </div>
         </Form>
       </div>
-
     </div>
   </main>
 </template>
@@ -58,7 +63,7 @@
 import { Form } from '@primevue/forms';
 import { Button, useToast, InputText, FloatLabel, Message } from 'primevue';
 import { onMounted, reactive, ref } from 'vue';
-import { apiLoginByName } from '@/api.js';
+import { apiRegister } from '@/api.js';
 import { useAuthStore } from '@/stores/authStore.js';
 import { useRouter } from 'vue-router';
 import { validateName, validatePassword } from '@/helpers/validationHelper.js';
@@ -70,6 +75,10 @@ const toast = useToast();
 const initialValues = reactive({
   name: '',
   password: '',
+});
+
+const errorsFromApi = reactive({
+  name: '',
 });
 
 const resolver = ({ values }) => {
@@ -94,7 +103,7 @@ const resolver = ({ values }) => {
 
 const isLoading = ref(false);
 
-async function sendLoginRequest(form) {
+async function sendRegisterRequest(form) {
   if (!form.valid) {
     return;
   }
@@ -106,7 +115,7 @@ async function sendLoginRequest(form) {
 
   isLoading.value = true;
 
-  const response = await apiLoginByName(data);
+  const response = await apiRegister(data);
 
   isLoading.value = false;
 
@@ -119,9 +128,9 @@ function processResponse(response) {
     return;
   }
 
-  if (!response.success) {
-    if (response.message === 'Invalid credentials.') {
-      toast.add({ summary: 'Invalid credentials', severity: 'error', life: 5000 });
+  if (!response.success && response.messages) {
+    if (response.messages.name) {
+      errorsFromApi.name = response.messages.name[0];
       return;
     }
   }
@@ -133,7 +142,7 @@ function processResponse(response) {
 
   authStore.setAccessToken(response.access_token);
 
-  toast.add({ summary: 'You have successfully logged in to your account', severity: 'success', life: 5000 });
+  toast.add({ summary: 'You have successfully created an account', severity: 'success', life: 5000 });
 
   router.push({ name: 'lobby' });
 }

@@ -36,3 +36,7 @@
   60%{background-position:0%  50%, 50% 100%,100%   0%}
   80%{background-position:0%  50%, 50%  50%,100% 100%}
 }
+
+.video {
+  @apply w-full border-1 border-stone-600 rounded;
+}
