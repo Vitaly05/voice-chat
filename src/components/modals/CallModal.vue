@@ -87,9 +87,26 @@
         <span>Ringing Icon</span>
       </div>
 
-      <div v-show="callStore.callState === callStates.call" class="flex flex-col gap-3">
-        <video ref="localVideoRef" class="video" autoplay playsinline muted />
-        <video ref="remoteVideoRef" class="video" autoplay playsinline muted />
+      <div
+        v-show="callStore.callState === callStates.call"
+        class="relative h-[55dvh] flex flex-col gap-3"
+      >
+        <video
+          ref="localVideoRef"
+          class="video absolute bottom-0 right-0 w-30"
+          :class="{ 'hidden': !isCameraEnabled }"
+          autoplay
+          playsinline
+          muted
+        />
+
+        <video
+          ref="remoteVideoRef"
+          class="h-full max-w-full aspect-[9/16] border-1 border-stone-600 rounded"
+          autoplay
+          playsinline
+          muted
+        />
 
         <audio ref="remoteAudioRef" autoplay />
       </div>
