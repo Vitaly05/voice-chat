@@ -47,6 +47,7 @@
           rounded
           @click="() => _toggleMicrophone(!isMicrophoneEnabled)"
         />
+
         <Button
           icon="pi pi-camera"
           size="large"
@@ -54,6 +55,7 @@
           rounded
           @click="() => _toggleCamera(!isCameraEnabled)"
         />
+
         <Button icon="pi pi-times" size="large" severity="danger" rounded @click="cancel" />
       </div>
 
@@ -62,6 +64,8 @@
         class="flex items-center justify-center w-full gap-10"
       >
         <Button icon="pi pi-times" size="large" severity="danger" rounded @click="close" />
+
+        <audio :src="endCall" autoplay />
       </div>
 
       <div
@@ -69,6 +73,8 @@
         class="flex items-center justify-center w-full gap-10"
       >
         <Button icon="pi pi-times" size="large" severity="danger" rounded @click="close" />
+
+        <audio :src="endCall" autoplay />
       </div>
     </template>
 
@@ -77,14 +83,39 @@
         v-if="callStore.callState === callStates.income"
         class="flex items-center justify-center h-full"
       >
-        <span>Income Call Icon</span>
+        <DotLottieVue
+          src="https://lottie.host/9fa913a4-15ff-4f93-aa25-b9a1b52594c4/8v5UaD7GcE.lottie"
+          autoplay
+          loop
+        />
+
+        <audio :src="incomeCall" autoplay loop />
       </div>
 
       <div
         v-if="callStore.callState === callStates.ringing"
         class="flex items-center justify-center h-full"
       >
-        <span>Ringing Icon</span>
+        <DotLottieVue
+          autoplay
+          loop
+          src="https://lottie.host/c709f78d-1088-4e02-8d76-e402d7262f41/t129d35sNC.lottie"
+        />
+
+        <audio :src="ringing" autoplay loop />
+      </div>
+
+      <div
+        v-if="callStore.callState === callStates.connecting"
+        class="flex items-center justify-center h-full"
+      >
+        <DotLottieVue
+          src="https://lottie.host/b830cd37-88a7-4a7a-a1af-a6535231e35e/PmX7tdw24N.lottie"
+          autoplay
+          loop
+        />
+
+        <audio :src="connecting" autoplay loop />
       </div>
 
       <div
@@ -94,7 +125,7 @@
         <video
           ref="localVideoRef"
           class="video absolute bottom-0 right-0 w-30"
-          :class="{ 'hidden': !isCameraEnabled }"
+          :class="{ hidden: !isCameraEnabled }"
           autoplay
           playsinline
           muted
@@ -115,6 +146,11 @@
 </template>
 
 <script setup>
+import incomeCall from '@/assets/media/sounds/income-call.mp3';
+import connecting from '@/assets/media/sounds/connecting.mp3';
+import ringing from '@/assets/media/sounds/ringing.mp3';
+import endCall from '@/assets/media/sounds/end-call.mp3';
+import { DotLottieVue } from '@lottiefiles/dotlottie-vue';
 import { Dialog, Button } from 'primevue';
 import { computed, ref, watchEffect } from 'vue';
 import { callStates, useCallStore } from '@/stores/callStore.js';
