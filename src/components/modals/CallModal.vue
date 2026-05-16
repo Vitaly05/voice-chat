@@ -144,10 +144,6 @@ watchEffect(() => {
     isCameraEnabled.value = false;
     isMicrophoneEnabled.value = true;
   }
-
-  if (callStore.callState === callStates.call) {
-    // _toggleMicrophone(true);
-  }
 });
 
 function reject() {

@@ -172,6 +172,74 @@ async function apiCancelCall(senderId) {
   }
 }
 
+async function apiAddFriend(name) {
+  try {
+    const response = await instance.post('user/add-friend', {
+      name: name,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiGetFriendshipRequests() {
+  try {
+    const response = await instance.get('user/get-friendship-requests');
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiAcceptFriendshipRequest(userId) {
+  try {
+    const response = await instance.post('user/accept-friendship-request', {
+      user_id: userId,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiRejectFriendshipRequest(userId) {
+  try {
+    const response = await instance.post('user/reject-friendship-request', {
+      user_id: userId,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiGetNotificationsCount() {
+  try {
+    const response = await instance.get('user/get-notifications-count');
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
+async function apiRemoveFriend(userId) {
+  try {
+    const response = await instance.post('user/remove-friend', {
+      user_id: userId,
+    });
+
+    return response.data;
+  } catch (e) {
+    console.error('Request error: ' + e.message);
+  }
+}
+
 export {
   apiBroadcastAuthorizer,
   apiRegister,
@@ -183,4 +251,10 @@ export {
   apiAcceptCall,
   apiRejectCall,
   apiCancelCall,
+  apiAddFriend,
+  apiGetFriendshipRequests,
+  apiAcceptFriendshipRequest,
+  apiRejectFriendshipRequest,
+  apiGetNotificationsCount,
+  apiRemoveFriend,
 };

@@ -1,7 +1,7 @@
 <template>
   <header class="sticky top-0 z-999 min-h-15 p-2 border-b border-green-600">
     <div class="absolute left-2 top-2">
-      <OverlayBadge v-if="appStateStore.haveNotification" severity="info">
+      <OverlayBadge v-if="appStateStore.notificationsCount > 0" severity="info">
         <Button @click="appStateStore.showMenu" icon="pi pi-bars" aria-label="Open menu" />
       </OverlayBadge>
 
